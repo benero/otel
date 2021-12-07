@@ -3,6 +3,7 @@ package fib
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel/codes"
 	"io"
 	"log"
 	"strconv"
@@ -44,7 +45,11 @@ func (a *App) Run(ctx context.Context) error {
 
 // Poll asks a user for input and returns the request.
 func (a *App) Poll(ctx context.Context) (uint, error) {
-	_, span := otel.Tracer(name).Start(ctx, "Poll")
+	_, span := otel.Tracer(name).Start(ctx, "Poll", trace.WithAttributes(
+		attribute.KeyValue{
+			Key:   "attr_poll",
+			Value: attribute.BoolValue(true),
+		}))
 	defer span.End()
 
 	a.l.Print("What Fibonacci number would you like to know: ")
@@ -69,7 +74,13 @@ func (a *App) Write(ctx context.Context, n uint) {
 	f, err := func(ctx context.Context) (uint64, error) {
 		_, span := otel.Tracer(name).Start(ctx, "Fibonacci")
 		defer span.End()
-		return Fibonacci(n)
+
+		f, err := Fibonacci(n)
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+		}
+		return f, err
 	}(ctx)
 	if err != nil {
 		a.l.Printf("Fibonacci(%d): %v\n", n, err)
