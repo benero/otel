@@ -69,7 +69,7 @@ func main() {
 	errCh := make(chan error)
 	app := fib.NewApp(os.Stdin, l)
 	go func() {
-		errCh <- app.Run(context.Background())
+		errCh <- app.Run()
 	}()
 
 	select {
