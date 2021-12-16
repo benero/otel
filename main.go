@@ -22,8 +22,6 @@ func newExporter(w io.Writer) (trace.SpanExporter, error) {
 		stdouttrace.WithWriter(w),
 		// Use human-readable output.
 		stdouttrace.WithPrettyPrint(),
-		// Do not print timestamps for the demo.
-		//stdouttrace.WithoutTimestamps(),
 	)
 }
 
@@ -69,7 +67,7 @@ func main() {
 	errCh := make(chan error)
 	app := fib.NewApp(os.Stdin, l)
 	go func() {
-		errCh <- app.Run(context.Background())
+		errCh <- app.Run()
 	}()
 
 	select {

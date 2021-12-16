@@ -27,10 +27,11 @@ func NewApp(r io.Reader, l *log.Logger) *App {
 }
 
 // Run starts polling users for Fibonacci number requests and writes results.
-func (a *App) Run(ctx context.Context) error {
+func (a *App) Run() error {
 	for {
 		var span trace.Span
-		ctx, span = otel.Tracer(name).Start(ctx, "Run")
+		var ctx context.Context
+		ctx, span = otel.Tracer(name).Start(context.Background(), "Run")
 
 		n, err := a.Poll(ctx)
 		if err != nil {
