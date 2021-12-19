@@ -5,24 +5,19 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
-	"io"
 	"log"
 	"os"
 	"os/signal"
 	"otel/fib"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 // newExporter returns a console exporter.
-func newExporter(w io.Writer) (trace.SpanExporter, error) {
-	return stdouttrace.New(
-		stdouttrace.WithWriter(w),
-		// Use human-readable output.
-		stdouttrace.WithPrettyPrint(),
-	)
+func newExporter(url string) (trace.SpanExporter, error) {
+	return jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
 }
 
 // newResource returns a resource describing this application.
@@ -38,14 +33,8 @@ func newResource() *resource.Resource {
 func main() {
 	l := log.New(os.Stdout, "", 0)
 
-	// Write telemetry data to a file.
-	f, err := os.Create("traces.txt")
-	if err != nil {
-		l.Fatal(err)
-	}
-	defer f.Close()
-
-	exp, err := newExporter(f)
+	url := "http://collector:14268/api/traces"
+	exp, err := newExporter(url)
 	if err != nil {
 		l.Fatal(err)
 	}
